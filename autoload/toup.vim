@@ -40,3 +40,28 @@ func! toup#up(type, patterns)
     let v:char = toupper(v:char)
   endif
 endfunc
+
+func! toup#handle_comments()
+  let col = col('.')
+
+  " Inserting at the end of the line doesn't return a synID,
+  " so we look at one column before.
+  if col > 1 && col == col('$')
+    let col -= 1
+  endif
+  if synIDtrans(synID(line('.'), col, 0)) != hlID('Comment')
+    return
+  endif
+
+  augroup toup_comments
+    autocmd!
+    autocmd InsertCharPre * call toup#up('comments', g:toup#comment_patterns)
+    autocmd InsertLeave * call toup#deactivate_comments()
+  augroup END
+endfunc
+
+func! toup#deactivate_comments()
+  augroup toup_comments
+    autocmd!
+  augroup END
+endfunc
